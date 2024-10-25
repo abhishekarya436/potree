@@ -147,13 +147,14 @@ export class Images360 extends EventDispatcher{
 
 		// Make focusedImage's object invisible and other objects small.
 		this.focusedImage.mesh.visible = false;
-		for(let image of this.images){
+		for(let i = 0; i < this.images.length; i++){
 			const scale = 0.05;
 			// This line would give all the objects the same screen-size regardless of distance.
 			// But it seems too hard to navigate the images like this, it's hard to get a sense of the 3D shape.
 			//const scale = 0.01*image.mesh.position.distanceTo(image360.mesh.position);
 
-			image.mesh.scale.set(scale,scale,scale);
+			this.images[i].mesh.scale.set(scale,scale,scale);
+			this.images[i].mesh.visible = this.focusedImage.neighbors.includes(i);
 		}
 
 		this.load(image360).then( () => {
@@ -248,7 +249,9 @@ export class Images360 extends EventDispatcher{
 		this.viewer.orbitControls.doubleClockZoomEnabled = true;
 		this.viewer.setControls(previousView.controls);
 
-		this.focusedImage.mesh.visible = true;
+		for(let image of this.images) {
+			image.mesh.visible = true;
+		}
 		this.focusedImage = null;
 
 		if(!this.alternateFocus) {
@@ -431,6 +434,8 @@ export class Images360Loader{
 			images360.images.push(image360);
 		}
 
+		Images360Loader.setNeighbors(images360);
+
 		Images360Loader.createSceneNodes(images360, params.transform);
 
 		return images360;
@@ -463,6 +468,80 @@ export class Images360Loader{
 			images360.node.add(mesh);
 
 			image360.mesh = mesh;
+		}
+	}
+
+	static setNeighbors(images360) {
+		const positions = images360.images.map((image) => new THREE.Vector3(...image.position));
+
+		// Set the max distance from an image to its neighbors.
+		let distanceSqLimit = 0;
+		// Setting distanceSqLimit to be the average (across all images) of the max (across images 3 in front and 3 behind) of distance squared between images.
+		for(let i = 0; i < positions.length; i++) {
+			let maxDistanceSq = 0;
+			for(let j = i-3; j <= i+3; j++) {
+				if(j >= 0 && j < positions.length) {
+					maxDistanceSq = Math.max(maxDistanceSq, positions[i].distanceToSquared(positions[j]));
+				}
+			}
+			distanceSqLimit += maxDistanceSq;
+		};
+		if(positions.length > 0) {
+			distanceSqLimit /= positions.length;
+		}
+
+		// Set the max angle between two neighbors of an image.
+		const angleCosLimit = Math.cos(Math.PI/6);
+
+		for(let i = 0; i < positions.length; i++) {
+			const neighborCandidates = [];
+			const acceptedNeighbors = [];
+
+			for(let j = 0; j < positions.length; j++) {
+				if(i == j)
+					continue;
+
+				const toOther = new THREE.Vector3().subVectors(positions[j], positions[i]);
+
+				// Adjacent items in the list are always neighbors.
+				if(Math.abs(i-j) == 1) {
+					acceptedNeighbors.push({idx: j, toOther, toOtherLength: toOther.length()});
+					continue;
+				}
+
+				const toOtherLengthSq = toOther.lengthSq();
+
+				// Item is too far away to be a neighbor.
+				if(toOtherLengthSq > distanceSqLimit)
+					continue;
+
+				neighborCandidates.push({idx: j, toOther, toOtherLength: Math.sqrt(toOtherLengthSq)});
+			}
+
+			neighborCandidates.sort((a,b) => a.toOtherLength - b.toOtherLength);
+
+			neighborCandidates.forEach((candidate) => {
+				// dot(A,B) = cos(angle between A and B) * length(A) * length(B)
+				// If angle must be > X, then dot(A,B) must be < cos(X) * length(A) * length(B)
+				// temp = cos(X) * length(A).
+				const temp = angleCosLimit * candidate.toOtherLength;
+				let angleTooClose = false;
+				for(const neighbor of acceptedNeighbors) {
+					if(candidate.toOther.dot(neighbor.toOther) >= temp * neighbor.toOtherLength) {
+						// If candidate's toOtherLength is 0, it gets rejected by the above condition, which is fine.
+						// If neighbor's toOtherLength is 0, (only possible for abs(i-j) == 1) it would block all others from being neighbors to this one, which is not fine, so we check that.
+						if(neighbor.toOtherLength != 0) {
+							angleTooClose = true;
+							break;
+						}
+					}
+				}
+				
+				if(!angleTooClose)
+					acceptedNeighbors.push(candidate);
+			});
+
+			images360.images[i].neighbors = acceptedNeighbors.map(neighbor => neighbor.idx);
 		}
 	}
 }
