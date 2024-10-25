@@ -153,8 +153,8 @@ export class Images360 extends EventDispatcher{
 			// But it seems too hard to navigate the images like this, it's hard to get a sense of the 3D shape.
 			//const scale = 0.01*image.mesh.position.distanceTo(image360.mesh.position);
 
-this.images[i].mesh.scale.set(scale,scale,scale);
-this.images[i].mesh.visible = this.focusedImage.neighbors.includes(i);
+			this.images[i].mesh.scale.set(scale,scale,scale);
+			this.images[i].mesh.visible = this.focusedImage.neighbors.includes(i);
 		}
 
 		this.load(image360).then( () => {
@@ -249,9 +249,9 @@ this.images[i].mesh.visible = this.focusedImage.neighbors.includes(i);
 		this.viewer.orbitControls.doubleClockZoomEnabled = true;
 		this.viewer.setControls(previousView.controls);
 
-for(let image of this.images) {
+		for(let image of this.images) {
 			image.mesh.visible = true;
-}
+		}
 		this.focusedImage = null;
 
 		if(!this.alternateFocus) {
