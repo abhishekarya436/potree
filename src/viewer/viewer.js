@@ -1646,7 +1646,12 @@ export class Viewer extends EventDispatcher{
 
 			let element = annotation.domElement;
 
-			let position = annotation.position.clone();
+			// let position = annotation.position.clone();
+			let position = { ...annotation.position };
+			// position.add(annotation.offset);
+			position.x = annotation.offset.x;
+			position.y = annotation.offset.y;
+			position.z = annotation.offset.z;
 			position.add(annotation.offset);
 			if (!position) {
 				position = annotation.boundingBox.getCenter(new THREE.Vector3());

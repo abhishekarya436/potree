@@ -9,18 +9,20 @@ export class Annotation extends EventDispatcher {
 	constructor (args = {}) {
 		super();
 
+		this._id = args.id || '';
 		this.scene = null;
-		this._title = args.title || 'No Title';
+		this._title = args.title || '';
 		this._description = args.description || '';
 		this.offset = new THREE.Vector3();
 		this.uuid = THREE.Math.generateUUID();
 
-		if (!args.position) {
+		// set position
+		if (!args.camera) {
 			this.position = null;
-		} else if (args.position.x != null) {
-			this.position = args.position;
+		} else if (args.camera.x != null) {
+			this.position = args.camera;
 		} else {
-			this.position = new THREE.Vector3(...args.position);
+			this.position = new THREE.Vector3(...args.camera);
 		}
 
 		this.cameraPosition = (args.cameraPosition instanceof Array)
@@ -55,6 +57,7 @@ export class Annotation extends EventDispatcher {
 					<span class="annotation-description-close">
 						<img src="${iconClose}" width="16px">
 					</span>
+					<span class="annotation-description-content"><strong>${this._title}</strong></span>
 					<span class="annotation-description-content">${this._description}</span>
 				</div>
 			</div>
@@ -62,17 +65,12 @@ export class Annotation extends EventDispatcher {
 
 		this.elTitlebar = this.domElement.find('.annotation-titlebar');
 		this.elTitle = this.elTitlebar.find('.annotation-label');
-		this.elTitle.append(this._title);
+		this.elTitle.append(this._id);
 		this.elDescription = this.domElement.find('.annotation-description');
 		this.elDescriptionClose = this.elDescription.find('.annotation-description-close');
 		// this.elDescriptionContent = this.elDescription.find(".annotation-description-content");
 
-		this.clickTitle = () => {
-			if(this.hasView()){
-				this.moveHere(this.scene.getActiveCamera());
-			}
-			this.dispatchEvent({type: 'click', target: this});
-		};
+		this.clickTitle = args.onClick;
 
 		this.elTitle.click(this.clickTitle);
 
@@ -569,5 +567,11 @@ export class Annotation extends EventDispatcher {
 
 	toString () {
 		return 'Annotation: ' + this._title;
+	}
+
+	setPosition(transformation) {
+		this.position.x = transformation?.position?.x || 0;
+		this.position.y = transformation?.position?.y || 0;
+		this.position.z = transformation?.position?.z || 0;
 	}
 };
