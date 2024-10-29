@@ -6,6 +6,90 @@ import {TextSprite} from "../../TextSprite.js";
 let sg = new THREE.SphereGeometry(1, 8, 8);
 let sgHigh = new THREE.SphereGeometry(1, 128, 128);
 
+const bodyLength = 0.5;
+const bodyHalfWidth = 0.3;
+const headLength = 0.5;
+const headHalfWidth = 0.5;
+const arrowHalfThickness = 0.05;
+const arrowOffset = [3,-2,0];
+// Create arrow shape from parameters.
+let arrowVertices = [[-bodyLength, -arrowHalfThickness, bodyHalfWidth],
+						[0, -arrowHalfThickness, bodyHalfWidth],
+						[0, -arrowHalfThickness, headHalfWidth],
+						[headLength, -arrowHalfThickness, 0]];
+// Add other half of arrow.
+[2,1,0].forEach((i) => arrowVertices.push([arrowVertices[i][0], arrowVertices[i][1], -arrowVertices[i][2]]));
+// Add top of arrow.
+arrowVertices.push(...arrowVertices.map((vertex) => [vertex[0], -vertex[1], vertex[2]]));
+// Add offset.
+arrowVertices = arrowVertices.map((vertex) => [0,1,2].map((dim) => arrowOffset[dim] + vertex[dim]));
+// Split into separate vertices for separate faces.
+arrowVertices = [
+	// Bottom
+	0,1,2,3,4,5,6,
+	// Top
+	7,8,9,10,11,12,13,
+
+	// Sides
+	0,1,7,8,
+	1,2,8,9,
+	2,3,9,10,
+	3,4,10,11,
+	4,5,11,12,
+	5,6,12,13,
+	6,0,13,7,
+].flatMap((i)=>arrowVertices[i]);
+const temp = 1/Math.sqrt(headHalfWidth*headHalfWidth + headLength*headLength);
+let arrowNorms = [
+	// Bottom
+	[0,-1,0],
+	// Top
+	[0,1,0],
+	// Sides
+	[0,0,1],
+	[-1,0,0],
+	[headHalfWidth*temp,0,headLength*temp],
+	[headHalfWidth*temp,0,-headLength*temp],
+	[-1,0,0],
+	[0,0,-1],
+	[-1,0,0],
+];
+arrowNorms = [
+	// Bottom
+	0,0,0,0,0,0,0,
+	// Top
+	1,1,1,1,1,1,1,
+
+	// Sides
+	2,2,2,2,
+	3,3,3,3,
+	4,4,4,4,
+	5,5,5,5,
+	6,6,6,6,
+	7,7,7,7,
+	8,8,8,8,
+].flatMap((i)=>arrowNorms[i]);
+const arrowTriangles = [
+	// Bottom
+	[6,1,0], [5,1,6], [4,3,2],
+	// Top
+	[7,8,13], [13,8,12], [9,10,11],
+	// Sides
+	[15,16,14], [16,15,17],
+	[19,20,18], [20,19,21],
+	[23,24,22], [24,23,25],
+	[27,28,26], [28,27,29],
+	[31,32,30], [32,31,33],
+	[35,36,34], [36,35,37],
+	[39,40,38], [40,39,41],
+];
+
+const arrowGeometry = new THREE.BufferGeometry();
+
+arrowGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arrowVertices), 3) );
+arrowGeometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(arrowNorms), 3) );
+arrowGeometry.setIndex(arrowTriangles.flat());
+
 let sm = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x98F4A6 });
 let smHovered = new THREE.MeshBasicMaterial({side: THREE.BackSide, color: 0xff0000});
 let clearMeshMaterial = new THREE.MeshBasicMaterial({side: THREE.BackSide});
@@ -147,14 +231,33 @@ export class Images360 extends EventDispatcher{
 
 		// Make focusedImage's object invisible and other objects small.
 		this.focusedImage.mesh.visible = false;
+		const focusCenter = this.focusedImage.mesh.getWorldPosition();
 		for(let i = 0; i < this.images.length; i++){
+			const otherMesh = this.images[i].mesh;
+
 			const scale = 0.05;
 			// This line would give all the objects the same screen-size regardless of distance.
 			// But it seems too hard to navigate the images like this, it's hard to get a sense of the 3D shape.
 			//const scale = 0.01*image.mesh.position.distanceTo(image360.mesh.position);
 
-			this.images[i].mesh.scale.set(scale,scale,scale);
-			this.images[i].mesh.visible = this.focusedImage.neighbors.includes(i);
+			otherMesh.scale.set(scale,scale,scale);
+			if(this.focusedImage.neighbors.includes(i)) {
+				otherMesh.visible = true;
+				otherMesh.geometry = arrowGeometry;
+				const toNeighbor = otherMesh.getWorldPosition().sub(focusCenter);
+				// Set arrows to point toward the neighbor.
+				otherMesh.setRotationFromEuler(new THREE.Euler(Math.PI/2,0,0));
+				if(toNeighbor.x != 0 || toNeighbor.y != 0) {
+					let angle = Math.atan(toNeighbor.y/toNeighbor.x);
+					if(toNeighbor.x < 0)
+						angle += Math.PI;
+					otherMesh.applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,0,angle)));
+				}
+				otherMesh.applyQuaternion(this.node.quaternion.clone().invert());
+				otherMesh.position.copy(this.focusedImage.mesh.position);
+			} else {
+				otherMesh.visible = false;
+			}
 		}
 
 		this.load(image360).then( () => {
@@ -251,6 +354,9 @@ export class Images360 extends EventDispatcher{
 
 		for(let image of this.images) {
 			image.mesh.visible = true;
+			image.mesh.geometry = sg;
+			image.mesh.setRotationFromEuler(new THREE.Euler(0,0,0));
+			image.mesh.position.copy(image.defaultPosition);
 		}
 		this.focusedImage = null;
 
@@ -354,7 +460,7 @@ export class Images360 extends EventDispatcher{
 			// Highlight the same sphere on other scene. Don't highlight if zoomed into the 360 view.
 			if (intersections.length > 1) {
 				this.currentlyHovered = intersection.object;
-this.currentlyHovered.material = smHovered;
+				this.currentlyHovered.material = smHovered;
 			}
 			if (this.companionObject && !this.companionObject.focusedImage && this.alternateFocus && intersections.length > 1) {
 				let objIdx = this.node.children.indexOf(intersection.object);
@@ -450,20 +556,11 @@ export class Images360Loader{
 
 			let mesh = new THREE.Mesh(sg, sm);
 			mesh.position.set(...xy, altitude);
+			image360.defaultPosition = mesh.position.clone();
 			mesh.scale.set(1, 1, 1);
 			mesh.material.transparent = true;
 			mesh.material.opacity = 0.6;
 			mesh.image360 = image360;
-
-			{ // orientation
-				var {course, pitch, roll} = image360;
-				mesh.rotation.set(
-					THREE.Math.degToRad(+roll + 90),
-					THREE.Math.degToRad(-pitch),
-					THREE.Math.degToRad(-course + 90),
-					"ZYX"
-				);
-			}
 
 			images360.node.add(mesh);
 
