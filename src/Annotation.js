@@ -70,9 +70,11 @@ export class Annotation extends EventDispatcher {
 		this.elDescriptionClose = this.elDescription.find('.annotation-description-close');
 		// this.elDescriptionContent = this.elDescription.find(".annotation-description-content");
 
-		this.clickTitle = args.onClick;
+		// this.clickTitle = args.onClick;
 
-		this.elTitle.click(this.clickTitle);
+		this.toggleVisible = () => {
+			this._visible = !this._visible;
+		};
 
 		this.actions = this.actions.map(a => {
 			if (a instanceof Action) {
@@ -332,6 +334,10 @@ export class Annotation extends EventDispatcher {
 		this._expand = expand;
 	}
 
+	get id () {
+		return this._id;
+	}
+	
 	get title () {
 		return this._title;
 	}
