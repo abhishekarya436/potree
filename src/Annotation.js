@@ -17,12 +17,12 @@ export class Annotation extends EventDispatcher {
 		this.uuid = THREE.Math.generateUUID();
 
 		// set position
-		if (!args.camera) {
+		if (!args.position) {
 			this.position = null;
-		} else if (args.camera.x != null) {
-			this.position = args.camera;
+		} else if (args.position.x != null) {
+			this.position = args.position;
 		} else {
-			this.position = new THREE.Vector3(...args.camera);
+			this.position = new THREE.Vector3(...args.position);
 		}
 
 		this.cameraPosition = (args.cameraPosition instanceof Array)
