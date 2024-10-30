@@ -588,7 +588,7 @@ export class Images360Loader{
 		}
 
 		// Set the max angle between two neighbors of an image.
-		const angleCosLimit = Math.cos(Math.PI/6);
+		const angleCosLimit = Math.cos(Math.PI/4);
 
 		for(let i = 0; i < positions.length; i++) {
 			const neighborCandidates = [];
