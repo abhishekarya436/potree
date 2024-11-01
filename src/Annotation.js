@@ -576,8 +576,14 @@ export class Annotation extends EventDispatcher {
 	}
 
 	setPosition(transformation) {
-		this.position.x = transformation?.position?.x || 0;
-		this.position.y = transformation?.position?.y || 0;
-		this.position.z = transformation?.position?.z || 0;
+		if (transformation.position) {
+			this.position.x = transformation.position.x;
+			this.position.y = transformation.position.y;
+			this.position.z = transformation.position.z;
+		} else {
+			this.position.x = 0;
+			this.position.y = 0;
+			this.position.z = 0;
+		}
 	}
 };
