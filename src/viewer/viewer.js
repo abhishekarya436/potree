@@ -1652,7 +1652,6 @@ export class Viewer extends EventDispatcher{
 			position.x += annotation.offset.x;
 			position.y += annotation.offset.y;
 			position.z += annotation.offset.z;
-			position.add(annotation.offset);
 			if (!position) {
 				position = annotation.boundingBox.getCenter(new THREE.Vector3());
 			}
