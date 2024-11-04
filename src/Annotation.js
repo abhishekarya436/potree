@@ -72,8 +72,8 @@ export class Annotation extends EventDispatcher {
 
 		// this.clickTitle = args.onClick;
 
-		this.toggleVisible = () => {
-			this._visible = !this._visible;
+		this.toggleVisible = (state) => {
+			this._visible = state;
 		};
 
 		this.clickTitle = () => {
