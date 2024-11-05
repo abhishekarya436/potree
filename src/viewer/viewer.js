@@ -270,6 +270,7 @@ export class Viewer extends EventDispatcher{
 
 		let scene = new Scene(this.renderer);
 		let scene2 = new Scene(this.renderer);
+		scene2.cameraMode = CameraMode.ORTHOGRAPHIC;
 		
 		{ // create VR scene
 			this.sceneVR = new THREE.Scene();
