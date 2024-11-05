@@ -57,8 +57,8 @@ export class Annotation extends EventDispatcher {
 					<span class="annotation-description-close">
 						<img src="${iconClose}" width="16px">
 					</span>
-					<span class="annotation-title-content"><strong>${this._title}</strong></span>
-					<span class="annotation-description-content">${this._description}</span>
+					<div class="annotation-title-content"><strong>${this._title}</strong></div>
+					<div class="annotation-description-content">${this._description}</div>
 				</div>
 			</div>
 		`);
