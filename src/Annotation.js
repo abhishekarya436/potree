@@ -36,7 +36,7 @@ export class Annotation extends EventDispatcher {
 		this.showDescription = true;
 		this.actions = args.actions || [];
 		this.isHighlighted = false;
-		this._visible = true;
+		this._visible = false;
 		this.__visible = true;
 		this._display = true;
 		this._expand = false;
@@ -57,7 +57,7 @@ export class Annotation extends EventDispatcher {
 					<span class="annotation-description-close">
 						<img src="${iconClose}" width="16px">
 					</span>
-					<span class="annotation-description-content"><strong>${this._title}</strong></span>
+					<span class="annotation-title-content"><strong>${this._title}</strong></span>
 					<span class="annotation-description-content">${this._description}</span>
 				</div>
 			</div>
@@ -74,6 +74,39 @@ export class Annotation extends EventDispatcher {
 
 		this.toggleVisible = (state) => {
 			this._visible = state;
+		};
+
+		this.setTitle = (title) => {
+			if (this._title === title) {
+				return;
+			}
+
+			this._title = title;
+			const elDescriptionContent = this.elDescription.find(".annotation-title-content");
+			elDescriptionContent.empty();
+			elDescriptionContent.append(`<strong>${this._title}</strong>`);
+
+			this.dispatchEvent({
+				type: "annotation_changed",
+				annotation: this,
+			});
+		};
+
+		this.setDescription = (description) => {
+			if (this._description === description) {
+				return;
+			}
+
+			this._description = description;
+
+			const elDescriptionContent = this.elDescription.find(".annotation-description-content");
+			elDescriptionContent.empty();
+			elDescriptionContent.append(this._description);
+
+			this.dispatchEvent({
+				type: "annotation_changed",
+				annotation: this,
+			});
 		};
 
 		this.clickTitle = () => {
