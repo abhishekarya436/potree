@@ -9,12 +9,14 @@ export class Annotation extends EventDispatcher {
 	constructor (args = {}) {
 		super();
 
+		this._id = args.id || '';
 		this.scene = null;
-		this._title = args.title || 'No Title';
+		this._title = args.title || '';
 		this._description = args.description || '';
 		this.offset = new THREE.Vector3();
 		this.uuid = THREE.Math.generateUUID();
 
+		// set position
 		if (!args.position) {
 			this.position = null;
 		} else if (args.position.x != null) {
@@ -34,7 +36,7 @@ export class Annotation extends EventDispatcher {
 		this.showDescription = true;
 		this.actions = args.actions || [];
 		this.isHighlighted = false;
-		this._visible = true;
+		this._visible = false;
 		this.__visible = true;
 		this._display = true;
 		this._expand = false;
@@ -55,17 +57,57 @@ export class Annotation extends EventDispatcher {
 					<span class="annotation-description-close">
 						<img src="${iconClose}" width="16px">
 					</span>
-					<span class="annotation-description-content">${this._description}</span>
+					<div class="annotation-title-content"><strong>${this._title}</strong></div>
+					<div class="annotation-description-content">${this._description}</div>
 				</div>
 			</div>
 		`);
 
 		this.elTitlebar = this.domElement.find('.annotation-titlebar');
 		this.elTitle = this.elTitlebar.find('.annotation-label');
-		this.elTitle.append(this._title);
+		this.elTitle.append(this._id);
 		this.elDescription = this.domElement.find('.annotation-description');
 		this.elDescriptionClose = this.elDescription.find('.annotation-description-close');
 		// this.elDescriptionContent = this.elDescription.find(".annotation-description-content");
+
+		// this.clickTitle = args.onClick;
+
+		this.toggleVisible = (state) => {
+			this._visible = state;
+		};
+
+		this.setTitle = (title) => {
+			if (this._title === title) {
+				return;
+			}
+
+			this._title = title;
+			const elDescriptionContent = this.elDescription.find(".annotation-title-content");
+			elDescriptionContent.empty();
+			elDescriptionContent.append(`<strong>${this._title}</strong>`);
+
+			this.dispatchEvent({
+				type: "annotation_changed",
+				annotation: this,
+			});
+		};
+
+		this.setDescription = (description) => {
+			if (this._description === description) {
+				return;
+			}
+
+			this._description = description;
+
+			const elDescriptionContent = this.elDescription.find(".annotation-description-content");
+			elDescriptionContent.empty();
+			elDescriptionContent.append(this._description);
+
+			this.dispatchEvent({
+				type: "annotation_changed",
+				annotation: this,
+			});
+		};
 
 		this.clickTitle = () => {
 			if(this.hasView()){
@@ -73,8 +115,6 @@ export class Annotation extends EventDispatcher {
 			}
 			this.dispatchEvent({type: 'click', target: this});
 		};
-
-		this.elTitle.click(this.clickTitle);
 
 		this.actions = this.actions.map(a => {
 			if (a instanceof Action) {
@@ -334,6 +374,10 @@ export class Annotation extends EventDispatcher {
 		this._expand = expand;
 	}
 
+	get id () {
+		return this._id;
+	}
+	
 	get title () {
 		return this._title;
 	}
@@ -569,5 +613,17 @@ export class Annotation extends EventDispatcher {
 
 	toString () {
 		return 'Annotation: ' + this._title;
+	}
+
+	setPosition(transformation) {
+		if (transformation.position) {
+			this.position.x = transformation.position.x;
+			this.position.y = transformation.position.y;
+			this.position.z = transformation.position.z;
+		} else {
+			this.position.x = 0;
+			this.position.y = 0;
+			this.position.z = 0;
+		}
 	}
 };

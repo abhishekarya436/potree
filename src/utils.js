@@ -250,8 +250,10 @@ export class Utils {
 
 	static moveTo(scene, endPosition, endTarget, i = 0){
 
-		let view = scene.viewer.getView(i);
-		let camera = scene.viewer.getCamera(i);
+		// let view = scene.viewer.getView(i);
+		// let camera = scene.viewer.getCamera(i);
+		let view = scene.views[i].view;
+		let camera = scene.views[i].cameraP;
 		let animationDuration = 500;
 		let easing = TWEEN.Easing.Quartic.Out;
 
