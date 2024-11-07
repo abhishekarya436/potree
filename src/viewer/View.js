@@ -18,6 +18,20 @@ export class View{
 		this.minPitch = -Math.PI / 2;
 	}
 
+	transform(transformation) {
+		this.position.x = transformation.position.x;
+		this.position.y = transformation.position.y;
+		this.position.z = transformation.position.z;
+
+		this._pitch = transformation.rotation.x;
+		this.yaw = transformation.rotation.y;
+		this.roll = transformation.rotation.z;
+
+		this.radius = transformation.scale.x;
+		this.sideOffset = transformation.scale.y;
+		this.upOffset = transformation.scale.z;
+	}
+
 	clone () {
 		let c = new View();
 		c.yaw = this.yaw;
