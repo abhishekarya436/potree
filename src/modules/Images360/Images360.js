@@ -93,9 +93,11 @@ export class Images360 extends EventDispatcher{
 			}
 		};
 
-		new OBJLoader().load(`${Potree.resourcePath}/models/location_pin.obj`,(obj)=>
-			this.pointerGeometry=obj.children[0].geometry
-		);
+		new OBJLoader().load(`${Potree.resourcePath}/models/pin_v2_2D.obj`,(obj)=>{
+			this.pointerGeometry = obj.children[0].geometry;
+			this.pointerMaterial = obj.children[0].material;
+			this.pointerMaterial.side = THREE.DoubleSide;
+		});
 
 		this.addEventListener("mousedown", this.focusFunction);
 	}
@@ -166,29 +168,43 @@ export class Images360 extends EventDispatcher{
 			if(this.focusedImage.neighbors.includes(i)) {
 				otherMesh.visible = true;
 				otherMesh.geometry = this.pointerGeometry;
+				otherMesh.material = this.pointerMaterial;
 
-				// Set direction of neighbor marker to point toward the neighbor.
 				otherMesh.setRotationFromEuler(new THREE.Euler(Math.PI/2,0,0));
-				const toNeighbor = otherMesh.getWorldPosition().sub(focusCenter);
-				if(toNeighbor.x == 0 && toNeighbor.y == 0) {
-					toNeighbor.x = 1;
-				}
-				let angle = Math.atan(toNeighbor.y/toNeighbor.x);
-				if(toNeighbor.x < 0)
-					angle += Math.PI;
-				otherMesh.applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,0,angle)));
-				otherMesh.applyQuaternion(this.node.quaternion.clone().invert());
 
-				// Attempt to make the neighbor appear to point to the correct spot on the ground.
+				const toNeighbor = otherMesh.getWorldPosition().sub(focusCenter);
+				// Attempt to make the neighbor appear to be on the ground.
 				toNeighbor.z -= 1;
 
-				toNeighbor.applyQuaternion(this.node.quaternion.clone().invert());
-				toNeighbor.divide(this.node.scale);
+				// Get horizontal rotation of marker.
+				let horizontalAngle = 0;
+				// Check for 0/0
+				if(toNeighbor.y != 0)
+					horizontalAngle = Math.atan(toNeighbor.y/toNeighbor.x);
+				if(toNeighbor.x < 0)
+					horizontalAngle += Math.PI;
 
-				// Attempt to make sure the neighbor isn't too close, which would make it inside the near clipping plane or blocking clicks.
+				// Get vetical rotation of marker.
+				let verticalAngle = 0;
+				// Check for 0/0
+				if(toNeighbor.z != 0)
+					verticalAngle = Math.asin(-toNeighbor.z/toNeighbor.length());
+
+				// Rotate to face camera.
+				otherMesh.applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,verticalAngle,horizontalAngle,"ZYX")));
+
+				// Attempt to make sure the neighbor isn't inside the near clipping plane or covering the whole screen.
+				if(toNeighbor.equals(new THREE.Vector3()))
+					toNeighbor.z = -1;
 				if(toNeighbor.lengthSq < 1)
 					toNeighbor.normalize();
 
+				// Convert to local coordinates.
+				otherMesh.applyQuaternion(this.node.quaternion.clone().invert());
+				toNeighbor.applyQuaternion(this.node.quaternion.clone().invert());
+				toNeighbor.divide(this.node.scale);
+
+				// Place marker.
 				otherMesh.position.copy(this.focusedImage.mesh.position).add(toNeighbor);
 			} else {
 				otherMesh.visible = false;
@@ -290,6 +306,7 @@ export class Images360 extends EventDispatcher{
 		for(let image of this.images) {
 			image.mesh.visible = true;
 			image.mesh.geometry = sg;
+			image.mesh.material = sm;
 			image.mesh.setRotationFromEuler(new THREE.Euler(0,0,0));
 			image.mesh.position.copy(image.defaultPosition);
 		}
@@ -413,7 +430,7 @@ export class Images360 extends EventDispatcher{
 		let {viewer} = this;
 
 		if(this.currentlyHovered){
-			this.currentlyHovered.material = sm;
+			this.currentlyHovered.material = this.focusedImage ? this.pointerMaterial : sm;
 			this.currentlyHovered = null;
 		}
 
