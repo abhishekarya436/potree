@@ -122,6 +122,8 @@ export class Annotation extends EventDispatcher {
 			this.dispatchEvent({type: 'click', target: this});
 		};
 
+		this.elTitle.click(this.clickTitle);
+
 		this.actions = this.actions.map(a => {
 			if (a instanceof Action) {
 				return a;
