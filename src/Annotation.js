@@ -25,10 +25,16 @@ export class Annotation extends EventDispatcher {
 			this.position = new THREE.Vector3(...args.position);
 		}
 
+		// Captured View
 		this.cameraPosition = (args.cameraPosition instanceof Array)
 			? new THREE.Vector3().fromArray(args.cameraPosition) : args.cameraPosition;
+		this.cameraRotation = (args.cameraRotation instanceof Array)
+			? new THREE.Vector3().fromArray(args.cameraRotation) : args.cameraRotation;
+		this.cameraScale = (args.cameraScale instanceof Array)
+			? new THREE.Vector3().fromArray(args.cameraScale) : args.cameraScale;
 		this.cameraTarget = (args.cameraTarget instanceof Array)
 			? new THREE.Vector3().fromArray(args.cameraTarget) : args.cameraTarget;
+			
 		this.radius = args.radius;
 		this.view = args.view || null;
 		this.keepOpen = false;
@@ -115,6 +121,8 @@ export class Annotation extends EventDispatcher {
 			}
 			this.dispatchEvent({type: 'click', target: this});
 		};
+
+		this.elTitle.click(this.clickTitle);
 
 		this.actions = this.actions.map(a => {
 			if (a instanceof Action) {
@@ -562,6 +570,31 @@ export class Annotation extends EventDispatcher {
 			return;
 		}
 
+		// If a default camera is set, switch to it
+		if (this.cameraPosition && this.cameraRotation && this.cameraScale) {
+			let transformation = {
+				position: {
+					x: this.cameraPosition.x,
+					y: this.cameraPosition.y,
+					z: this.cameraPosition.z,
+				},
+				rotation: {
+					x: this.cameraRotation.x,
+					y: this.cameraRotation.y,
+					z: this.cameraRotation.z,
+				},
+				scale: {
+					x: this.cameraScale.x,
+					y: this.cameraScale.y,
+					z: this.cameraScale.z,
+				},
+			}
+
+			this.scene.views[0].view.transform(transformation);
+
+			return;
+		}
+
 		let view = this.scene.view;
 		let animationDuration = 500;
 		let easing = TWEEN.Easing.Quartic.Out;
@@ -615,15 +648,60 @@ export class Annotation extends EventDispatcher {
 		return 'Annotation: ' + this._title;
 	}
 
-	setPosition(transformation) {
-		if (transformation.position) {
-			this.position.x = transformation.position.x;
-			this.position.y = transformation.position.y;
-			this.position.z = transformation.position.z;
-		} else {
-			this.position.x = 0;
-			this.position.y = 0;
-			this.position.z = 0;
+	setPosition(position) {
+		if (this.position === position) {
+			return;
 		}
+
+		this.position.x = position.x;
+		this.position.y = position.y;
+		this.position.z = position.z;
+
+		this.dispatchEvent({
+			type: "annotation_changed",
+			annotation: this,
+		});
+	}
+
+	setCamera(transformation) {
+
+		if (this.cameraPosition) {
+			this.cameraPosition.x = transformation.position.x;
+			this.cameraPosition.y = transformation.position.y;
+			this.cameraPosition.z = transformation.position.z;
+		}
+
+		if (this.cameraRotation) {
+			this.cameraRotation.x = transformation.rotation.x;
+			this.cameraRotation.y = transformation.rotation.y;
+			this.cameraRotation.z = transformation.rotation.z;
+		}
+
+		if (this.cameraScale) {
+			this.cameraScale.x = transformation.scale.x;
+			this.cameraScale.y = transformation.scale.y;
+			this.cameraScale.z = transformation.scale.z;
+		}
+
+		this.dispatchEvent({
+			type: "annotation_changed",
+			annotation: this,
+		});
+	}
+
+	deleteCamera() {
+		// Allows camera to still zoom in to annotations when no default camera is set
+		this.cameraPosition.x = this.position.x + 50;
+		this.cameraPosition.y = this.position.y + 50;
+		this.cameraPosition.z = this.position.z + 50;
+
+		// Everything else can be null
+		this.cameraRotation = null;
+		this.cameraScale = null;
+
+		this.dispatchEvent({
+			type: "annotation_changed",
+			annotation: this,
+		});
 	}
 };
