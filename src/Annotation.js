@@ -29,9 +29,9 @@ export class Annotation extends EventDispatcher {
 		this.cameraPosition = (args.cameraPosition instanceof Array)
 			? new THREE.Vector3().fromArray(args.cameraPosition) : args.cameraPosition;
 		this.cameraRotation = (args.cameraRotation instanceof Array)
-			? new Vector3().fromArray(args.cameraRotation) : args.cameraRotation;
+			? new THREE.Vector3().fromArray(args.cameraRotation) : args.cameraRotation;
 		this.cameraScale = (args.cameraScale instanceof Array)
-			? new Vector3().fromArray(args.cameraScale) : args.cameraScale;
+			? new THREE.Vector3().fromArray(args.cameraScale) : args.cameraScale;
 		this.cameraTarget = (args.cameraTarget instanceof Array)
 			? new THREE.Vector3().fromArray(args.cameraTarget) : args.cameraTarget;
 			
