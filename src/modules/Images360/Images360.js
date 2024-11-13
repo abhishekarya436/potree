@@ -5,8 +5,11 @@ import { EventDispatcher } from "../../EventDispatcher.js";
 let sg = new THREE.SphereGeometry(1, 8, 8);
 let sgHigh = new THREE.SphereGeometry(1, 128, 128);
 
-let sm = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x98F4A6 });
-let smHovered = new THREE.MeshBasicMaterial({side: THREE.BackSide, color: 0xff0000});
+const red = 0xff0000;
+const green = 0x98F4A6;
+
+let sm = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: green });
+let smHovered = new THREE.MeshBasicMaterial({side: THREE.BackSide, color: red});
 smHovered.transparent = true;
 
 let pm;
@@ -98,8 +101,9 @@ export class Images360 extends EventDispatcher{
 		
 		if(!pm) {
 			new THREE.TextureLoader().load(`${Potree.resourcePath}/textures/pin_white_2D.png`,(map)=>{
-				pm = new THREE.SpriteMaterial({map:map, color: 0xff0000});
-				pmHovered = new THREE.SpriteMaterial({map:map, color: 0xffff00});
+				pm = new THREE.SpriteMaterial({map:map, color: green});
+				pm.opacity = 0.6;
+				pmHovered = new THREE.SpriteMaterial({map:map, color: red});
 			});
 		}
 
