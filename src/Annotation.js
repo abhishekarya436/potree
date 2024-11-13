@@ -653,14 +653,16 @@ export class Annotation extends EventDispatcher {
 			return;
 		}
 
-		this.position.x = position.x;
-		this.position.y = position.y;
-		this.position.z = position.z;
+		if (position) {
+			this.position.x = position.x;
+			this.position.y = position.y;
+			this.position.z = position.z;
 
-		this.dispatchEvent({
-			type: "annotation_changed",
-			annotation: this,
-		});
+			this.dispatchEvent({
+				type: "annotation_changed",
+				annotation: this,
+			});
+		}
 	}
 
 	setCamera(transformation) {
