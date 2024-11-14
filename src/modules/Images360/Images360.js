@@ -1,13 +1,20 @@
 
 import * as THREE from "../../../libs/three.js/build/three.module.js";
 import { EventDispatcher } from "../../EventDispatcher.js";
-import {TextSprite} from "../../TextSprite.js";
 
 let sg = new THREE.SphereGeometry(1, 8, 8);
 let sgHigh = new THREE.SphereGeometry(1, 128, 128);
 
-let sm = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x98F4A6 });
-let smHovered = new THREE.MeshBasicMaterial({side: THREE.BackSide, color: 0xff0000});
+const red = 0xff0000;
+const green = 0x98F4A6;
+
+let sm = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: green });
+let smHovered = new THREE.MeshBasicMaterial({side: THREE.BackSide, color: red});
+smHovered.transparent = true;
+
+let pm;
+let pmHovered;
+
 let clearMeshMaterial = new THREE.MeshBasicMaterial({side: THREE.BackSide});
 clearMeshMaterial.transparent = true;
 clearMeshMaterial.opacity = 0.6;
@@ -56,6 +63,7 @@ export class Images360 extends EventDispatcher{
 		this.selectingEnabled = true;
 
 		this.images = [];
+		this.pointers = [];
 		this.node = new THREE.Object3D();
 
 		this.sphere = new THREE.Mesh(sgHigh, sm);
@@ -90,6 +98,14 @@ export class Images360 extends EventDispatcher{
 				}
 			}
 		};
+		
+		if(!pm) {
+			new THREE.TextureLoader().load(`${Potree.resourcePath}/textures/pin_white_2D.png`,(map)=>{
+				pm = new THREE.SpriteMaterial({map:map, color: green});
+				pm.opacity = 0.6;
+				pmHovered = new THREE.SpriteMaterial({map:map, color: red});
+			});
+		}
 
 		this.addEventListener("mousedown", this.focusFunction);
 	}
@@ -145,16 +161,38 @@ export class Images360 extends EventDispatcher{
 		this.viewer.setControls(this.viewer.orbitControls);
 		this.viewer.orbitControls.doubleClockZoomEnabled = false;
 
-		// Make focusedImage's object invisible and other objects small.
-		this.focusedImage.mesh.visible = false;
+		const focusCenter = this.focusedImage.mesh.getWorldPosition();
 		for(let i = 0; i < this.images.length; i++){
-			const scale = 0.05;
-			// This line would give all the objects the same screen-size regardless of distance.
-			// But it seems too hard to navigate the images like this, it's hard to get a sense of the 3D shape.
-			//const scale = 0.01*image.mesh.position.distanceTo(image360.mesh.position);
+			const otherMesh = this.images[i].mesh;
 
-			this.images[i].mesh.scale.set(scale,scale,scale);
-			this.images[i].mesh.visible = this.focusedImage.neighbors.includes(i);
+			otherMesh.visible = false;
+			if(this.focusedImage.neighbors.includes(i)) {
+				const pointerSprite = new THREE.Sprite(pm);
+				this.node.add(pointerSprite);
+				this.pointers.push(pointerSprite);
+				pointerSprite.sphere = otherMesh;
+				
+				const pointerScale = 0.1;
+				const aspectRatio = ((image)=>image.width/image.height)(pm.map.image);
+				pointerSprite.scale.set(pointerScale*aspectRatio, pointerScale, 1);
+				pointerSprite.center=new THREE.Vector2(0.5,0);
+
+				const toNeighbor = otherMesh.getWorldPosition().sub(focusCenter);
+				// Lower the pointer to the ground.
+				toNeighbor.z -= 1;
+				// Prevent the pointer from being inside the near clipping plane or covering the screen.
+				if(toNeighbor.equals(new THREE.Vector3()))
+					toNeighbor.z = -1;
+				if(toNeighbor.lengthSq < 1)
+					toNeighbor.normalize();
+
+				// Convert to local coordinates.
+				toNeighbor.applyQuaternion(this.node.quaternion.clone().invert());
+				toNeighbor.divide(this.node.scale);
+
+				// Place pointer.
+				pointerSprite.position.copy(this.focusedImage.mesh.position).add(toNeighbor);
+			}
 		}
 
 		this.load(image360).then( () => {
@@ -234,6 +272,9 @@ export class Images360 extends EventDispatcher{
 			this.sphere.material = null;
 		}
 
+		this.pointers.forEach((pointer) => this.node.remove(pointer));
+		this.pointers = [];
+
 		this.sphere.visible = false;
 
 		this.sphere.material = clearMeshMaterial;
@@ -251,6 +292,10 @@ export class Images360 extends EventDispatcher{
 
 		for(let image of this.images) {
 			image.mesh.visible = true;
+			image.mesh.geometry = sg;
+			image.mesh.material = sm;
+			image.mesh.setRotationFromEuler(new THREE.Euler(0,0,0));
+			image.mesh.position.copy(image.defaultPosition);
 		}
 		this.focusedImage = null;
 
@@ -316,6 +361,7 @@ export class Images360 extends EventDispatcher{
 		let intersections = [];
 		// Backwards loop so the last rendered zone (the one rendered on top) catches the mouse in case of overlapping canvases.
 		for (let i = viewer.scissorZones.length - 1; i >= 0; i--) {
+			// Find correct scissor zone.
 			if (
 				!viewer.scissorZones[i].visible ||
 				!viewer.scissorZones[i].scene.images360.includes(this)
@@ -323,7 +369,12 @@ export class Images360 extends EventDispatcher{
 				continue;
 			if(i == 0 && this.cpmsRaycaster) {
 				// Check if this 360image set is behind anything else.
-				const raycast = this.cpmsRaycaster.castRay();
+				let resources = this.cpmsRaycaster.components.resources;
+				// In focus mode, allow clicking through bim walls and other objects. But not 360 images, or else it will highlight both.
+				if(this.focusedImage) {
+					resources = resources.filter((x) => x.isT60Image4D);
+				}
+				const raycast = this.cpmsRaycaster.castRay(resources);
 				if(!raycast || raycast.object !== this || viewer.navigationCube.hovered)
 					break;
 			}
@@ -335,24 +386,22 @@ export class Images360 extends EventDispatcher{
 			if (ray) {
 				// let tStart = performance.now();
 				raycaster.ray.copy(ray);
-				let spheres = this.node.children;
-				if(this.focusedImage) {
-					spheres = spheres.filter((sphere) => sphere !== this.focusedImage.mesh);
-				}
+				raycaster.camera = viewer.getCamera(i);
+				// Do not hover the background sphere or spheres hidden during focus mode.
+				let spheres = this.node.children.filter((sphere) => sphere.visible && sphere !== this.sphere);
 				intersections.push(raycaster.intersectObjects(spheres));
 			}
 		}
 		intersections = intersections.flat();
 
-		if(intersections.length === 0){
-			// label.visible = false;
-
-		return;
-		}
-
 		const intersection = intersections[0];
-		// Highlight the same sphere on other scene. Don't highlight if zoomed into the 360 view.
 		if (intersection) {
+			// Highlight the pointer if applicable.
+			if(intersection.object instanceof THREE.Sprite) {
+				intersection.object.material = pmHovered;
+				intersection.object = intersection.object.sphere;
+			}
+			// Highlight the same sphere on other scene if applicable. Don't highlight if zoomed into the 360 view.
 			this.currentlyHovered = intersection.object;
 			this.currentlyHovered.material = smHovered;
 			if (this.companionObject && !this.companionObject.focusedImage && this.isMiniscene) {
@@ -370,6 +419,10 @@ export class Images360 extends EventDispatcher{
 	update(){
 
 		let {viewer} = this;
+
+		this.pointers.forEach((pointer) => {
+			pointer.material = pm;
+		});
 
 		if(this.currentlyHovered){
 			this.currentlyHovered.material = sm;
@@ -462,20 +515,11 @@ export class Images360Loader{
 
 			let mesh = new THREE.Mesh(sg, sm);
 			mesh.position.set(...xy, altitude);
+			image360.defaultPosition = mesh.position.clone();
 			mesh.scale.set(1, 1, 1);
 			mesh.material.transparent = true;
 			mesh.material.opacity = 0.6;
 			mesh.image360 = image360;
-
-			{ // orientation
-				var {course, pitch, roll} = image360;
-				mesh.rotation.set(
-					THREE.Math.degToRad(+roll + 90),
-					THREE.Math.degToRad(-pitch),
-					THREE.Math.degToRad(-course + 90),
-					"ZYX"
-				);
-			}
 
 			images360.node.add(mesh);
 
@@ -503,7 +547,7 @@ export class Images360Loader{
 		}
 
 		// Set the max angle between two neighbors of an image.
-		const angleCosLimit = Math.cos(Math.PI/6);
+		const angleCosLimit = Math.cos(Math.PI/4);
 
 		for(let i = 0; i < positions.length; i++) {
 			const neighborCandidates = [];
