@@ -77,7 +77,7 @@ export class Viewer extends EventDispatcher{
 			if ($(domElement).find('#potree_annotations').length === 0) {
 				let potreeAnnotationContainer = $(`
 					<div id="potree_annotation_container" 
-						style="position: absolute; z-index: 100000; width: 100%; height: 100%; pointer-events: none;"></div>`);
+						style="position: absolute; z-index: 100000; width: 100%; height: 100%; pointer-events: none; overflow: hidden;"></div>`);
 				$(domElement).append(potreeAnnotationContainer);
 			}
 
@@ -270,6 +270,7 @@ export class Viewer extends EventDispatcher{
 
 		let scene = new Scene(this.renderer);
 		let scene2 = new Scene(this.renderer);
+		scene2.cameraMode = CameraMode.ORTHOGRAPHIC;
 		
 		{ // create VR scene
 			this.sceneVR = new THREE.Scene();
@@ -1646,8 +1647,12 @@ export class Viewer extends EventDispatcher{
 
 			let element = annotation.domElement;
 
-			let position = annotation.position.clone();
-			position.add(annotation.offset);
+			// let position = annotation.position.clone();
+			let position = { ...annotation.position };
+			// position.add(annotation.offset);
+			position.x += annotation.offset.x;
+			position.y += annotation.offset.y;
+			position.z += annotation.offset.z;
 			if (!position) {
 				position = annotation.boundingBox.getCenter(new THREE.Vector3());
 			}

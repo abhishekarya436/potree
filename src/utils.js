@@ -250,8 +250,10 @@ export class Utils {
 
 	static moveTo(scene, endPosition, endTarget, i = 0){
 
-		let view = scene.viewer.getView(i);
-		let camera = scene.viewer.getCamera(i);
+		// let view = scene.viewer.getView(i);
+		// let camera = scene.viewer.getCamera(i);
+		let view = scene.views[i].view;
+		let camera = scene.views[i].cameraP;
 		let animationDuration = 500;
 		let easing = TWEEN.Easing.Quartic.Out;
 
@@ -562,19 +564,14 @@ export class Utils {
 				return null;
 
 		// Position with respect to viewport instead of canvas.
-		let normalizedMouse = {
-			x: ((mouse.x - viewport.x) / viewport.width) * 2 - 1,
-			y: (((height - mouse.y) - viewport.y) / viewport.height) * 2 - 1
-		};
+		let normalizedMouse = new THREE.Vector2(
+			((mouse.x - viewport.x) / viewport.width) * 2 - 1,
+			(((height - mouse.y) - viewport.y) / viewport.height) * 2 - 1
+		);
 
-		let vector = new THREE.Vector3(normalizedMouse.x, normalizedMouse.y, 0.5);
-		let origin = camera.position.clone();
-		vector.unproject(camera);
-		let direction = new THREE.Vector3().subVectors(vector, origin).normalize();
-
-		let ray = new THREE.Ray(origin, direction);
-
-		return ray;
+		const raycaster = new THREE.Raycaster();
+		raycaster.setFromCamera(normalizedMouse, camera);
+		return raycaster.ray;
 	}
 
 	static projectedRadius(radius, camera, distance, screenWidth, screenHeight){

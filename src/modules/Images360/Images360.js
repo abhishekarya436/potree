@@ -67,7 +67,7 @@ export class Images360 extends EventDispatcher{
 		this.node = new THREE.Object3D();
 
 		this.sphere = new THREE.Mesh(sgHigh, sm);
-		this.alternateFocus = false;
+		this.isMiniscene = false;
 		this.sphere.visible = false;
 		this.sphere.scale.set(1000, 1000, 1000);
 		this.node.add(this.sphere);
@@ -86,7 +86,7 @@ export class Images360 extends EventDispatcher{
 		this.focusFunction = () => {
 			if(this.currentlyHovered && this.currentlyHovered.image360) {
 				// calling focus from mini scene's 360 images
-				if (this.alternateFocus) {
+				if (this.isMiniscene) {
 					if (this.companionObject.focusedImage) {
 						let objIdx = this.node.children.indexOf(this.currentlyHovered);
 						this.companionObject.currentlyHovered = this.companionObject.node.children[objIdx];
@@ -208,7 +208,7 @@ export class Images360 extends EventDispatcher{
 			this.sphere.material.map = image360.texture;
 			this.sphere.material.needsUpdate = true;
 		});
-		if (!this.alternateFocus) {
+		if (!this.isMiniscene) {
 			this.sphere.material = clearMeshMaterial;
 		}
 
@@ -299,7 +299,7 @@ export class Images360 extends EventDispatcher{
 		}
 		this.focusedImage = null;
 
-		if(!this.alternateFocus) {
+		if(!this.isMiniscene) {
 			this.sphere.material = sm;
 		}
 
@@ -394,7 +394,7 @@ export class Images360 extends EventDispatcher{
 		}
 		intersections = intersections.flat();
 
-		let intersection = intersections[0];
+		const intersection = intersections[0];
 		if (intersection) {
 			// Highlight the pointer if applicable.
 			if(intersection.object instanceof THREE.Sprite) {
@@ -404,7 +404,7 @@ export class Images360 extends EventDispatcher{
 			// Highlight the same sphere on other scene if applicable. Don't highlight if zoomed into the 360 view.
 			this.currentlyHovered = intersection.object;
 			this.currentlyHovered.material = smHovered;
-			if (this.companionObject && !this.companionObject.focusedImage && this.alternateFocus) {
+			if (this.companionObject && !this.companionObject.focusedImage && this.isMiniscene) {
 				let objIdx = this.node.children.indexOf(intersection.object);
 				this.companionObject.currentlyHovered = this.companionObject.node.children[objIdx];
 				this.companionObject.currentlyHovered.material = smHovered;
@@ -439,6 +439,18 @@ export class Images360 extends EventDispatcher{
 		}
 		else if(!newVisible && this.visible) {
 			this.hide();
+		}
+		
+		if(this.isMiniscene){
+			const view = viewer.getView(1);
+			const object = this.node;
+			if(view && object) {
+				// Dividing by 25 makes it seem mostly normal at the default view position of z=100.
+				const scale = Math.min(1, (view.position.z - object.position.z) / (object.scale.x * 25));
+				this.node.children.forEach((sphere) => 
+					sphere.scale.set(scale,scale,scale)
+				);
+			}
 		}
 	}
 
