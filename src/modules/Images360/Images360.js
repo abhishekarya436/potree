@@ -172,7 +172,7 @@ export class Images360 extends EventDispatcher{
 				this.pointers.push(pointerSprite);
 				pointerSprite.sphere = otherMesh;
 				
-				const pointerScale = 0.15;
+				const pointerScale = 0.1;
 				const aspectRatio = ((image)=>image.width/image.height)(pm.map.image);
 				pointerSprite.scale.set(pointerScale*aspectRatio, pointerScale, 1);
 				pointerSprite.center=new THREE.Vector2(0.5,0);
