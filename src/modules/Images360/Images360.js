@@ -39,6 +39,7 @@ class Image360{
 		this.pitch = pitch;
 		this.roll = roll;
 		this.mesh = null;
+		this.annotations= [];
 	}
 };
 
@@ -142,6 +143,7 @@ export class Images360 extends EventDispatcher{
 
 	focus(image360){
 		if(this.manager.isFocussed()){
+			this.manager.showLinkedAnnotations(this.focusedImage,image360)
 			this.manager.unFocus(true);
 		}
 		else {
@@ -149,6 +151,7 @@ export class Images360 extends EventDispatcher{
 			previousView = {};
 		}
 		this.manager.setSelected360(this.parent);
+		this.manager.showLinkedAnnotations(this.focusedImage,image360)
 
 		this.focusedImage = image360;
 
@@ -260,7 +263,7 @@ export class Images360 extends EventDispatcher{
 	unfocus(immediate = false){
 		
 		let image = this.focusedImage;
-
+		this.manager.showLinkedAnnotations(this.focusedImage,null)
 		if(image === null){
 			return;
 		}
