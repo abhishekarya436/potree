@@ -114,6 +114,19 @@ export class View{
 		this.direction = dir;
 	}
 
+	// Sets the camera position, pivot, and rotation to the specified values.
+	// Values that are left out will be unchanged.
+	setCameraParams(newPosition=this.position, newPivot=this.getPivot(), pitch=this.pitch, roll=this.roll, yaw=this.yaw) {
+		this.position.copy(newPosition);
+		this.pitch = pitch;
+		this.roll = roll;
+		this.yaw = yaw;
+		const V = new THREE.Vector3().subVectors(newPivot,newPosition);
+		this.radius = V.dot(this.direction);
+		this.sideOffset = V.dot(this.getSide());
+		this.upOffset = V.dot(this.getUp());
+	}
+
 	getSide () {
 		let side = new THREE.Vector3(1, 0, 0);
 		// Does not require applyAxisAngle(1,0,0) because it would have no effect on the vector
