@@ -1,6 +1,6 @@
 {
   "name": "potree-powern",
-  "version": "1.8.28",
+  "version": "1.8.29",
   "description": "WebGL point cloud viewer",
   "keywords": [
     "point",
