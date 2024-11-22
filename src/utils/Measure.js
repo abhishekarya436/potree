@@ -913,12 +913,12 @@ export class Measure extends THREE.Object3D {
 				});
 				// gives the direction of vector for raycaster
 				let direction = this.computeVolume(points, this.volumeType);
-				let x_min = 10000;
-				let y_min = 10000;
-				let z_min = 10000;
-				let x_max = -10000;
-				let y_max = -10000;
-				let z_max = -10000;
+				let x_min = Infinity;
+				let y_min = Infinity;
+				let z_min = Infinity;
+				let x_max = -Infinity;
+				let y_max = -Infinity;
+				let z_max = -Infinity;
 
 				points.forEach((point) => {
 					if(point.x < x_min) x_min = point.x;
@@ -929,26 +929,34 @@ export class Measure extends THREE.Object3D {
 					if(point.z > z_max) z_max = point.z;
 				});
 
-				//Using raycaster to find intersection points for every 2 units of distance
-				for (let x = x_min; x < x_max; x += 2) {
-					for (let y = y_min; y < y_max; y += 2) {
-						let raycaster_volume = new THREE.Raycaster(
-							new THREE.Vector3(x, y, z_min),
-							direction
-						);
-						let intersections = raycaster_volume.intersectObjects(
-							this.castObjects
-						);
-						if (intersections.length) {
-							this.pointsToAdd.push(intersections[0].point);
+				if([x_min,y_min,z_min,x_max,y_max,z_max].every(x=>![Infinity,-Infinity,NaN].includes(x))) {
+					// Target number of points
+					const point_count = 1000;
+					// Separation between points to achieve target.
+					const point_separation = Math.sqrt((x_max - x_min) * (y_max - y_min) / point_count);
+				
+					//Using raycaster to find intersection points for approximately point_count points.
+					for (let x = x_min; x < x_max; x += point_separation) {
+						for (let y = y_min; y < y_max; y += point_separation) {
+							let raycaster_volume = new THREE.Raycaster(
+								new THREE.Vector3(x, y, z_min),
+								direction
+							);
+							let intersections = raycaster_volume.intersectObjects(
+								this.castObjects
+							);
+							if (intersections.length) {
+								this.pointsToAdd.push(intersections[0].point);
+							}
 						}
 					}
+					this.calcVolume = false;
+					this.volumeLabel.position.copy(centroid);
+					this.volumeLabel.visible = this.showVolume && this.points.length >= 3;
+					this.volume = this.getVolume();
+				} else {
+					this.calcVolume = false;
 				}
-
-				this.calcVolume = false;
-				this.volumeLabel.position.copy(centroid);
-				this.volumeLabel.visible = this.showVolume && this.points.length >= 3;
-				this.volume = this.getVolume();
 			}
 			let displayVolume = this.volume;
 			let suffix = "";
