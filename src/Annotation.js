@@ -15,6 +15,8 @@ export class Annotation extends EventDispatcher {
 		this._description = args.description || '';
 		this.offset = new THREE.Vector3();
 		this.uuid = THREE.Math.generateUUID();
+		this.scaleX = args.scaleX || 1.0;
+		this.scaleY = args.scaleY || 1.0;
 
 		// set position
 		if (!args.position) {
@@ -81,6 +83,18 @@ export class Annotation extends EventDispatcher {
 		this.toggleVisible = (state) => {
 			this._visible = state;
 		};
+
+		this.setScale = (x, y) => {
+			this.scaleX = x;
+			this.scaleY = y;
+
+			this.elTitlebar.css("transform", `scale(${this.scaleX}, ${this.scaleY})`);
+
+			this.dispatchEvent({
+				type: "annotation_changed",
+				annotation: this,
+			});
+		}
 
 		this.setTitle = (title) => {
 			if (this._title === title) {
@@ -213,6 +227,8 @@ export class Annotation extends EventDispatcher {
 
 			domElement.css("left", `${start.x}px`);
 			domElement.css("top", `${start.y}px`);
+
+			domElement.css("transform", `scale(${this.scaleX}, ${this.scaleY})`);
 
 		};
 
