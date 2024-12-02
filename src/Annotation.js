@@ -17,6 +17,7 @@ export class Annotation extends EventDispatcher {
 		this.uuid = THREE.Math.generateUUID();
 		this.scaleX = args.scaleX || 1.0;
 		this.scaleY = args.scaleY || 1.0;
+		this.shape = args.shape || "cloud";
 
 		// set position
 		if (!args.position) {
@@ -56,20 +57,65 @@ export class Annotation extends EventDispatcher {
 
 		let iconClose = exports.resourcePath + '/icons/close.svg';
 
-		this.domElement = $(`
-			<div class="annotation" oncontextmenu="return false;">
-				<div class="annotation-titlebar">
-					<span class="annotation-label"></span>
+		if (this.shape == "cloud") {
+			this.domElement = $(`
+				<div class="annotation" oncontextmenu="return false;">
+					<svg class="annotation-titlebar" width="2.2rem" height="2.0rem" viewBox="0 0 40 40">
+						<path d="M22.368 8.682a9.005 9.005 0 0 1 8.997 8.997l-.005.084q-.007.1-.01.2l-.034 1.36 1.363.005a6.006 6.006 0 0 1 5.979 5.996 
+							6.013 6.013 0 0 1-5.966 5.995l-.292.002H8.002a6.675 6.675 0 0 1-6.658-6.663 6.67 6.67 0 0 1 4.504-6.3l.75-.256.133-.782a3.983 
+							3.983 0 0 1 5.725-2.897l1.215.61.587-1.227c1.49-3.114 4.673-5.125 8.11-5.125zm0-1.333a10.33 10.33 0 0 0-9.313 5.882 5.25 5.25 
+							0 0 0-2.389-.57 5.325 5.325 0 0 0-5.25 4.438 7.993 7.993 0 0 0 2.585 
+							15.555l24.695-.002a7.329 7.329 0 0 0-.015-14.656c.003-.107.015-.21.015-.317 0-5.705-4.625-10.329-10.329-10.329z"
+							fill="#FF0000" stroke="#FF0000"
+						/>
+						<text class="annotation-label" x="0.35rem" y="1.8rem" />
+					</svg>
+					<div class="annotation-description">
+						<span class="annotation-description-close">
+							<img src="${iconClose}" width="16px">
+						</span>
+						<div class="annotation-title-content"><strong>${this._title}</strong></div>
+						<div class="annotation-description-content">${this._description}</div>
+					</div>
 				</div>
-				<div class="annotation-description">
-					<span class="annotation-description-close">
-						<img src="${iconClose}" width="16px">
-					</span>
-					<div class="annotation-title-content"><strong>${this._title}</strong></div>
-					<div class="annotation-description-content">${this._description}</div>
+			`);
+		} else if (this.shape == "cloud") {
+			this.domElement = $(`
+				<div class="annotation" oncontextmenu="return false;">
+					<svg class="annotation-titlebar" width="2.2rem" height="2.0rem" viewBox="0 -5 35 35">
+						<path d="M4.5 0H0.5C0.223858 0 0 0.223858 0 0.5V4.5C0 4.70223 0.121821 4.88455 0.308658 4.96194C0.495495 5.03933 0.710554 
+							4.99655 0.853553 4.85355L2.5 3.20711L14.1464 14.8536L14.8536 14.1464L3.20711 2.5L4.85355 0.853553C4.99655 0.710554 5.03933 
+							0.495495 4.96194 0.308658C4.88455 0.121821 4.70223 0 4.5 0Z" 
+							fill="#FF0000" stroke="#FF0000"
+						/>
+						<text class="annotation-label" x="0.35rem" y="1.8rem" />
+					</svg>
+					<div class="annotation-description">
+						<span class="annotation-description-close">
+							<img src="${iconClose}" width="16px">
+						</span>
+						<div class="annotation-title-content"><strong>${this._title}</strong></div>
+						<div class="annotation-description-content">${this._description}</div>
+					</div>
 				</div>
-			</div>
-		`);
+			`);
+		} else {
+			// Dot
+			this.domElement = $(`
+				<div class="annotation" oncontextmenu="return false;">
+					<div class="annotation-titlebar">
+						<span class="annotation-label"></span>
+					</div>
+					<div class="annotation-description">
+						<span class="annotation-description-close">
+							<img src="${iconClose}" width="16px">
+						</span>
+						<div class="annotation-title-content"><strong>${this._title}</strong></div>
+						<div class="annotation-description-content">${this._description}</div>
+					</div>
+				</div>
+			`);
+		}
 
 		this.elTitlebar = this.domElement.find('.annotation-titlebar');
 		this.elTitle = this.elTitlebar.find('.annotation-label');
@@ -95,6 +141,15 @@ export class Annotation extends EventDispatcher {
 				annotation: this,
 			});
 		}
+
+		this.setShape = (shape) => {
+			this.shape = shape;
+
+			this.dispatchEvent({
+				type: "annotation_changed",
+				annotation: this,
+			});
+		};
 
 		this.setTitle = (title) => {
 			if (this._title === title) {
