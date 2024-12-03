@@ -61,15 +61,15 @@ export class Annotation extends EventDispatcher {
 		if (this.shape == "cloud") {
 			this.domElement = $(`
 				<div class="annotation" oncontextmenu="return false;">
-					<svg class="annotation-titlebar" width="2.2rem" height="2.0rem" viewBox="0 0 40 40">
+					<svg class="annotation-titlebar" width="2.2rem" height="2.0rem" viewBox="0 0 40 40" id="${this._id}">
 						<path d="M22.368 8.682a9.005 9.005 0 0 1 8.997 8.997l-.005.084q-.007.1-.01.2l-.034 1.36 1.363.005a6.006 6.006 0 0 1 5.979 5.996 
 							6.013 6.013 0 0 1-5.966 5.995l-.292.002H8.002a6.675 6.675 0 0 1-6.658-6.663 6.67 6.67 0 0 1 4.504-6.3l.75-.256.133-.782a3.983 
 							3.983 0 0 1 5.725-2.897l1.215.61.587-1.227c1.49-3.114 4.673-5.125 8.11-5.125zm0-1.333a10.33 10.33 0 0 0-9.313 5.882 5.25 5.25 
 							0 0 0-2.389-.57 5.325 5.325 0 0 0-5.25 4.438 7.993 7.993 0 0 0 2.585 
 							15.555l24.695-.002a7.329 7.329 0 0 0-.015-14.656c.003-.107.015-.21.015-.317 0-5.705-4.625-10.329-10.329-10.329z"
-							fill="#${this.color}" stroke="#${this.color}"
+							fill="#${this.color}" stroke="#${this.color}" id="${this._id}"
 						/>
-						<text class="annotation-label" x="0.35rem" y="1.8rem" />
+						<text class="annotation-label" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" id="${this._id}" />
 					</svg>
 					<div class="annotation-description">
 						<span class="annotation-description-close">
@@ -83,13 +83,13 @@ export class Annotation extends EventDispatcher {
 		} else {
 			this.domElement = $(`
 				<div class="annotation" oncontextmenu="return false;">
-					<svg class="annotation-titlebar" width="2.2rem" height="2.0rem" viewBox="0 -5 35 35">
+					<svg class="annotation-titlebar" width="2.2rem" height="2.0rem" viewBox="0 -5 35 35" id="${this._id}">
 						<path d="M4.5 0H0.5C0.223858 0 0 0.223858 0 0.5V4.5C0 4.70223 0.121821 4.88455 0.308658 4.96194C0.495495 5.03933 0.710554 
 							4.99655 0.853553 4.85355L2.5 3.20711L14.1464 14.8536L14.8536 14.1464L3.20711 2.5L4.85355 0.853553C4.99655 0.710554 5.03933 
 							0.495495 4.96194 0.308658C4.88455 0.121821 4.70223 0 4.5 0Z" 
-							fill="#${this.color}" stroke="#${this.color}"
+							fill="#${this.color}" stroke="#${this.color}" id="${this._id}"
 						/>
-						<text class="annotation-label" x="0.35rem" y="1.8rem" />
+						<text class="annotation-label" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" id="${this._id}" />
 					</svg>
 					<div class="annotation-description">
 						<span class="annotation-description-close">
@@ -121,7 +121,7 @@ export class Annotation extends EventDispatcher {
 
 		this.elTitlebar = this.domElement.find('.annotation-titlebar');
 		this.elTitle = this.elTitlebar.find('.annotation-label');
-		this.elTitle.append(this._id);
+		this.elTitle.append(this._title);
 		this.elDescription = this.domElement.find('.annotation-description');
 		this.elDescriptionClose = this.elDescription.find('.annotation-description-close');
 		// this.elDescriptionContent = this.elDescription.find(".annotation-description-content");
@@ -137,6 +137,11 @@ export class Annotation extends EventDispatcher {
 			this.scaleY = y;
 
 			this.elTitlebar.css("transform", `scale(${this.scaleX}, ${this.scaleY})`);
+			let text = this.domElement.find('text');
+			let textX = 1 / this.scaleX;
+			let textY = 1 / this.scaleY;
+			text.css("transform-origin", `center`);
+			text.css("transform", `scale(${textX}, ${textY})`);
 
 			this.dispatchEvent({
 				type: "annotation_changed",
@@ -221,7 +226,7 @@ export class Annotation extends EventDispatcher {
 			this.dispatchEvent({type: 'click', target: this});
 		};
 
-		this.elTitle.click(this.clickTitle);
+		this.elTitlebar.click(this.clickTitle);
 
 		this.actions = this.actions.map(a => {
 			if (a instanceof Action) {
