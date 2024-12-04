@@ -654,7 +654,7 @@ export class Annotation extends EventDispatcher {
 	setHighlighted (highlighted) {
 		if (highlighted) {
 			this.domElement.css('opacity', '0.8');
-			this.elTitlebar.css('box-shadow', '0 0 5px #fff');
+			// this.elTitlebar.css('box-shadow', '0 0 5px #fff');
 			this.domElement.css('z-index', '1000');
 
 			if (this._description) {
