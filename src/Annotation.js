@@ -86,10 +86,11 @@ export class Annotation extends EventDispatcher {
 		} else {
 			this.domElement = $(`
 				<div class="annotation" oncontextmenu="return false;">
-					<svg class="annotation-titlebar" width="2.2rem" height="2.0rem" viewBox="0 -5 35 35" id="${this._id}">
+					<svg class="annotation-titlebar" width="2.2rem" height="2.0rem" viewBox="0 -5 20 40" id="${this._id}">
 						<path d="M4.5 0H0.5C0.223858 0 0 0.223858 0 0.5V4.5C0 4.70223 0.121821 4.88455 0.308658 4.96194C0.495495 5.03933 0.710554 
 							4.99655 0.853553 4.85355L2.5 3.20711L14.1464 14.8536L14.8536 14.1464L3.20711 2.5L4.85355 0.853553C4.99655 0.710554 5.03933 
 							0.495495 4.96194 0.308658C4.88455 0.121821 4.70223 0 4.5 0Z" 
+							transform-origin="center" transform="translate(0, -200)"
 							fill="#${this.color}" stroke="#${this.color}" id="${this._id}"
 						/>
 						<text class="annotation-label" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" id="${this._id}" />
@@ -138,10 +139,7 @@ export class Annotation extends EventDispatcher {
 			this.scaleX = x;
 			this.scaleY = y;
 
-			let scaleFactor = 1;
-			if (this.shape == "cloud") {
-				scaleFactor = 0.1;
-			}
+			let scaleFactor = 0.1;
 			let realScaleX = this.scaleX * scaleFactor;
 			let realScaleY = this.scaleY * scaleFactor;
 
@@ -151,6 +149,11 @@ export class Annotation extends EventDispatcher {
 			let textY = (this.scaleY > 1) ? (1 / scaleFactor / this.scaleY) : 1.0 / scaleFactor;
 			text.css("transform-origin", `center`);
 			text.css("transform", `scale(${textX}, ${textY})`);
+
+			if (this.shape !== "cloud") {
+				let path = this.domElement.find('path');
+				path.css("transform", `scale(10, 10)`);
+			}
 
 			this.dispatchEvent({
 				type: "annotation_changed",
