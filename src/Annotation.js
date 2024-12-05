@@ -70,7 +70,8 @@ export class Annotation extends EventDispatcher {
 							271.31C209.625 268.124 215.309 276.772 189.446 287.251C163.584 297.731 136.528 297.731 108.263 280.462C103.196 
 							277.366 101.377 271.486 102.805 262.821C90.5901 267.786 78.4655 267.786 66.4309 262.821C48.3792 255.373 32.8758 
 							244.641 41.4096 229.569C47.0989 219.52 52.8885 213.514 58.7785 211.551"
-							stroke-width="16" stroke-linecap="round" stroke-linejoin="round" transform="translate(-180, -200)"
+							stroke-width="16" stroke-linecap="round" stroke-linejoin="round" 
+							transform-origin="center" transform="translate(-180, -200)"
 							fill="none" stroke="#${this.color}" id="${this._id}"
 						/>
 						<text class="annotation-label" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" id="${this._id}" />
@@ -150,9 +151,13 @@ export class Annotation extends EventDispatcher {
 			text.css("transform-origin", `center`);
 			text.css("transform", `scale(${textX}, ${textY})`);
 
+			let path = this.domElement.find('path')[0];
 			if (this.shape !== "cloud") {
-				let path = this.domElement.find('path');
-				path.css("transform", `scale(10, 10)`);
+				path.setAttribute("transform", "translate(0, -200)");
+				path.setAttribute("transform", `scale(10, 10)`);
+			} else {
+				path.setAttribute("transform", `scale(1, 1)`);
+				path.setAttribute("transform", "translate(-180, -200)");
 			}
 
 			this.dispatchEvent({
@@ -164,7 +169,6 @@ export class Annotation extends EventDispatcher {
 		this.setShape = (shape) => {
 			this.shape = shape;
 
-			this.setScale(this.scaleX, this.scaleY);
 			let path = this.domElement.find('path')[0];
 			if (shape == "cloud") {
 				path.setAttribute("d", `M69.7342 193.406C62.4304 174.217 64.9745 158.596 77.3666 146.545C103.099 121.52 114 122 146.545 135.127C147.99 
@@ -176,7 +180,6 @@ export class Annotation extends EventDispatcher {
 				229.569C47.0989 219.52 52.8885 213.514 58.7785 211.551`);
 				path.setAttribute("stroke-width", "16");
 				path.setAttribute("fill", "none");
-				path.setAttribute("transform-origin", "center");
 				path.setAttribute("transform", "translate(-180, -200)");
 			} else if (shape == "arrow") {
 				path.setAttribute("d", `M4.5 0H0.5C0.223858 0 0 0.223858 0 0.5V4.5C0 4.70223 0.121821 4.88455 0.308658 4.96194C0.495495 5.03933 0.710554 
@@ -184,11 +187,11 @@ export class Annotation extends EventDispatcher {
 				0.495495 4.96194 0.308658C4.88455 0.121821 4.70223 0 4.5 0Z`);
 				path.setAttribute("stroke-width", "1");
 				path.setAttribute("fill", `#${this.color}`);
-				path.setAttribute("transform-origin", "center");
 				path.setAttribute("transform", "translate(0, -200)");
 			} else {
 				// do nothing
 			}
+			this.setScale(this.scaleX, this.scaleY);
 
 			this.dispatchEvent({
 				type: "annotation_changed",
@@ -200,8 +203,13 @@ export class Annotation extends EventDispatcher {
 			this.color = color;
 
 			let path = this.domElement.find('path')[0];
-			path.setAttribute("fill", `#${this.color}`);
 			path.setAttribute("stroke", `#${this.color}`);
+
+			if (this.shape == "cloud") {
+				path.setAttribute("fill", `none`);
+			} else {
+				path.setAttribute("fill", `#${this.color}`);
+			}
 
 			this.dispatchEvent({
 				type: "annotation_changed",
