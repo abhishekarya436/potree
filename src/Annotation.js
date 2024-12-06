@@ -19,6 +19,7 @@ export class Annotation extends EventDispatcher {
 		this.scaleY = args.scaleY || 1.0;
 		this.shape = args.shape || "cloud";
 		this.color = args.color || "ff0000";
+		this.textColor = args.textColor || "000000"
 
 		// set position
 		if (!args.position) {
@@ -74,7 +75,7 @@ export class Annotation extends EventDispatcher {
 							transform-origin="center" transform="translate(-180, -200)"
 							fill="none" stroke="#${this.color}" id="${this._id}"
 						/>
-						<text class="annotation-label" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" id="${this._id}" />
+						<text class="annotation-label" x="50%" y="50%" fill="#${this.textColor}" dominant-baseline="middle" text-anchor="middle" id="${this._id}" />
 					</svg>
 					<div class="annotation-description">
 						<span class="annotation-description-close">
@@ -94,7 +95,7 @@ export class Annotation extends EventDispatcher {
 							transform-origin="center" transform="translate(0, -200)"
 							fill="#${this.color}" stroke="#${this.color}" id="${this._id}"
 						/>
-						<text class="annotation-label" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" id="${this._id}" />
+						<text class="annotation-label" x="50%" y="50%" fill="#${this.textColor}" dominant-baseline="middle" text-anchor="middle" id="${this._id}" />
 					</svg>
 					<div class="annotation-description">
 						<span class="annotation-description-close">
@@ -146,8 +147,8 @@ export class Annotation extends EventDispatcher {
 
 			this.elTitlebar.css("transform", `scale(${realScaleX}, ${realScaleY})`);
 			let text = this.domElement.find('text');
-			let textX = (this.scaleX > 1) ? (1 / scaleFactor / this.scaleX) : 1.0 / scaleFactor;
-			let textY = (this.scaleY > 1) ? (1 / scaleFactor / this.scaleY) : 1.0 / scaleFactor;
+			let textX = (this.scaleX >= 2) ? (2 / scaleFactor / this.scaleX) : 1.0 / scaleFactor;
+			let textY = (this.scaleY >= 2) ? (2 / scaleFactor / this.scaleY) : 1.0 / scaleFactor;
 			text.css("transform-origin", `center`);
 			text.css("transform", `scale(${textX}, ${textY})`);
 
@@ -210,6 +211,18 @@ export class Annotation extends EventDispatcher {
 			} else {
 				path.setAttribute("fill", `#${this.color}`);
 			}
+
+			this.dispatchEvent({
+				type: "annotation_changed",
+				annotation: this,
+			});
+		};
+
+		this.setTextColor = (color) => {
+			this.textColor = color;
+
+			let text = this.domElement.find('text')[0];
+			text.setAttribute("fill", `#${this.textColor}`);
 
 			this.dispatchEvent({
 				type: "annotation_changed",
