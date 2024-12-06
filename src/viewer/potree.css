@@ -201,16 +201,17 @@ a:hover, a:visited, a:link, a:active{
 }
 
 .annotation-titlebar{
-	color:			white;
+	/* color:			white;
 	background-color:	black;
 	border-radius:	1.5em;
 	border:			1px solid rgba(255, 255, 255, 0.7);
-	font-size:		1em;
+	font-size:		1em; */
 	opacity:		1;
 	margin:			auto;
 	display:		table;
-	padding:		1px 8px;
+	/* padding:		1px 8px; */
 	cursor: 		pointer;
+	overflow: 		visible;
 }
 
 .annotation-expand{
@@ -254,7 +255,7 @@ a:hover, a:visited, a:link, a:active{
 
 .annotation-item:hover {
 	opacity:		1.0;
-	box-shadow:		0 0 5px #ffffff;
+	/* box-shadow:		0 0 5px #ffffff; */
 }
 
 .annotation-main{
