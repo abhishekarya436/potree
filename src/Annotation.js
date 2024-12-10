@@ -23,7 +23,7 @@ export class Annotation extends EventDispatcher {
 
 		// set position
 		if (!args.position) {
-			this.position = null;
+			this.position = new THREE.Vector3(0, 0, 0);
 		} else if (args.position.x != null) {
 			this.position = args.position;
 		} else {
@@ -704,8 +704,12 @@ export class Annotation extends EventDispatcher {
 	}
 
 	hasView () {
-		let hasPosTargetView = this.cameraTarget.x != null;
-		hasPosTargetView = hasPosTargetView && this.cameraPosition.x != null;
+		let hasPosTargetView = false;
+
+		if (this.cameraTarget && this.cameraPosition) {
+			hasPosTargetView = this.cameraTarget.x != null;
+			hasPosTargetView = hasPosTargetView && this.cameraPosition.x != null;
+		}
 
 		let hasRadiusView = this.radius !== undefined;
 
