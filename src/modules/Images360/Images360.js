@@ -109,14 +109,17 @@ export class Images360 extends EventDispatcher{
 		}
 
 		this.addEventListener("mousedown", this.focusFunction);
+		this.addEventListener("touchend", this.focusFunction);
 	}
 
 	addListeners() {
 		this.addEventListener("mousedown", this.focusFunction, false);
+		this.addEventListener("touchend", this.focusFunction, false);
 	}
 
 	releaseListeners() {
 		this.removeEventListener("mousedown", this.focusFunction, false);
+		this.removeEventListener("touchend", this.focusFunction, false);
 	}
 	
 	set visible(visible){
