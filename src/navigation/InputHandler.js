@@ -87,6 +87,7 @@ export class InputHandler extends EventDispatcher {
 
 		e.preventDefault();
 
+		let i = 0;
 		if (e.touches.length === 1) {
 			let rect = this.domElement.getBoundingClientRect();
 			let x = e.touches[0].pageX - rect.left;
@@ -98,7 +99,6 @@ export class InputHandler extends EventDispatcher {
 			this.startDragging(null);
 
 			// Backwards loop so if two canvases are overlapping, the last rendered one (the one on top) catches the touch.
-			let i;
 			for (i = this.viewer.scissorZones.length - 1; i >= 0; i--) {
 				if (!this.viewer.scissorZones[i].visible) continue;
 				const scissor = this.viewer.getScissor(i);
@@ -129,6 +129,7 @@ export class InputHandler extends EventDispatcher {
 
 		e.preventDefault();
 
+		let i = 0;
 		let rect = this.domElement.getBoundingClientRect();
 		let x = e.changedTouches[0].pageX - rect.left;
 		let y = e.changedTouches[0].pageY - rect.bottom;
@@ -137,7 +138,6 @@ export class InputHandler extends EventDispatcher {
 		this.mouse.set(x, y);
 
 		// Backwards loop so if two canvases are overlapping, the last rendered one (the one on top) catches the touch.
-		let i;
 		for (i = this.viewer.scissorZones.length - 1; i >= 0; i--) {
 			if (!this.viewer.scissorZones[i].visible) continue;
 			const scissor = this.viewer.getScissor(i);
@@ -178,6 +178,7 @@ export class InputHandler extends EventDispatcher {
 
 		e.preventDefault();
 		
+		let i = 0;
 		if (e.touches.length === 1) {
 			let rect = this.domElement.getBoundingClientRect();
 			let x = e.touches[0].pageX - rect.left;
@@ -187,7 +188,6 @@ export class InputHandler extends EventDispatcher {
 			this.mouse.set(x, y);
 	
 			// Backwards loop so if two canvases are overlapping, the last rendered one (the one on top) catches the touch.
-			let i;
 			for (i = this.viewer.scissorZones.length - 1; i >= 0; i--) {
 				if (!this.viewer.scissorZones[i].visible) continue;
 				const scissor = this.viewer.getScissor(i);
