@@ -1,0 +1,25 @@
+name: Build
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysiss
+      - uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: sqp_9cacb96644d1553f457f7df255ce3fa5929e51a5
+          SONAR_HOST_URL: https://sq.beehyv.com
+        with:
+          args: >
+            -Dsonar.projectKey=PowerNpotree
+            -Dsonar.projectName=potree
+
