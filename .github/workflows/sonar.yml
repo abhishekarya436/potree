@@ -20,6 +20,6 @@ jobs:
           SONAR_HOST_URL: https://sq.beehyv.com
         with:
           args: >
-            -Dsonar.projectKey=PowerNpotree
+            -Dsonar.projectKey=PowerN-potree
             -Dsonar.projectName=potree
 
